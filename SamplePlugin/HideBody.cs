@@ -25,6 +25,7 @@ namespace SamplePlugin
             // Mod disabled entirely: restore vanilla camera and stop overriding body culling.
             if (!Plugin.P.Configuration.Setting_ModEnabled)
             {
+                GlobalVars.DebugStatus = "mod disabled in settings";
                 camera->VTable.getCameraPosition.Original(camera, target, position, swapPerson);
                 DisabledMod();
                 Plugin.P.DisableDrawGameObject();
@@ -35,6 +36,7 @@ namespace SamplePlugin
             // camera->mode == 1 is third person.
             if (camera->mode == 1 && Plugin.P.Configuration.Setting_FirstPersonOnly)
             {
+                GlobalVars.DebugStatus = $"THIRD PERSON (mode={camera->mode}) - zoom fully in to first person";
                 camera->VTable.getCameraPosition.Original(camera, target, position, swapPerson);
                 DisableModInThirdPerson();
                 Plugin.P.DisableDrawGameObject();
