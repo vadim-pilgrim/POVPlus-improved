@@ -219,19 +219,29 @@ namespace SamplePlugin
 
         public static void Initialize()
         {
-            if (Common.CameraManager == null || !Common.IsValid(Common.CameraManager->worldCamera) || !Common.IsValid(Common.InputData))
-                throw new ApplicationException("Failed to validate core structures!");
+            // We only need a live world camera to hook. The old Hypostasis IsValid() checks
+            // reflect-and-verify a bunch of unrelated game-function signatures and fail on newer
+            // patches, which used to prevent the camera hook from ever being created.
+            if (Common.CameraManager == null || Common.CameraManager->worldCamera == null)
+            {
+                GlobalVars.DebugStatus = "Init failed: CameraManager/worldCamera not ready";
+                Service.Log.Warning("POV+ Initialize: CameraManager/worldCamera not ready, hook not created");
+                return;
+            }
 
-            var vtbl = Common.CameraManager->worldCamera->VTable;
-            vtbl.getCameraPosition.CreateHook(GetCameraPositionDetour);
+            var worldCamera = Common.CameraManager->worldCamera;
 
-            Service.Log.Information($"===CALLED INIT===");
+            worldCamera->VTable.getCameraPosition.CreateHook(GetCameraPositionDetour);
 
-            GlobalVars.PreviousMaxVRotation = Common.CameraManager->worldCamera->maxVRotation;
-            GlobalVars.PreviousMinVRotation = Common.CameraManager->worldCamera->minVRotation;
-            GlobalVars.PreviousCurrentFoV = Common.CameraManager->worldCamera->currentFoV;
-            GlobalVars.PreviousTilt = Common.CameraManager->worldCamera->tilt;
-            GlobalVars.PreviousMinFOV = Common.CameraManager->worldCamera->minFoV;
+            GlobalVars.PreviousMaxVRotation = worldCamera->maxVRotation;
+            GlobalVars.PreviousMinVRotation = worldCamera->minVRotation;
+            GlobalVars.PreviousCurrentFoV = worldCamera->currentFoV;
+            GlobalVars.PreviousTilt = worldCamera->tilt;
+            GlobalVars.PreviousMinFOV = worldCamera->minFoV;
+
+            var hooked = worldCamera->VTable.getCameraPosition.IsHooked;
+            GlobalVars.DebugStatus = $"Init OK: camera hook created (hooked={hooked})";
+            Service.Log.Information($"POV+ Initialize: camera hook created, hooked={hooked}");
         }
 
         public static void Dispose()
