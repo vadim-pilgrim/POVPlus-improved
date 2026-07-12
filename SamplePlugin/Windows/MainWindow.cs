@@ -134,6 +134,35 @@ public class MainWindow : Window, IDisposable
         ImGui.Spacing();
         ImGui.Dummy(new Vector2(0, 20));
 
+        // --- Camera bone picker -----------------------------------------------------------------
+        ImGui.TextUnformatted("Camera Bone (which bone the camera is pinned to):");
+        ImGui.TextUnformatted($"Current [{Plugin.P.Configuration.BoneToBind}]: {GlobalVars.BoneToBindName}");
+
+        var boneMax = Math.Max(GlobalVars.PlayerBoneCount, 1);
+
+        if (ImGui.Button("<##bonePrev") && Plugin.P.Configuration.BoneToBind > 0)
+        {
+            Plugin.P.Configuration.BoneToBind--;
+            plugin.Configuration.Save();
+        }
+        ImGui.SameLine();
+        if (ImGui.Button(">##boneNext") && Plugin.P.Configuration.BoneToBind < boneMax)
+        {
+            Plugin.P.Configuration.BoneToBind++;
+            plugin.Configuration.Save();
+        }
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 160 * ImGuiHelpers.GlobalScale);
+        if (ImGui.SliderInt("Bone##boneToBind", ref Plugin.P.Configuration.BoneToBind, 0, boneMax))
+            plugin.Configuration.Save();
+
+        ImGui.TextWrapped("Tip: scrub until the camera sits on your head (look for a bone named j_kao), " +
+                          "then use X Offset to push forward to your eyes. Binding to the head bone also " +
+                          "makes the camera bob with the run animation.");
+
+        ImGui.Spacing();
+        ImGui.Dummy(new Vector2(0, 20));
+
         ImGui.TextUnformatted($"EXPERIMENTAL BELOW - Causes rotation issues when moving while holding right mouse button");
 
         ImGui.Spacing();

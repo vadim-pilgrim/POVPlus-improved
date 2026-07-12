@@ -43,6 +43,12 @@ namespace SamplePlugin
 
             // --- Camera position: pin it to the head bone plus the configured offset ---------------
 
+            // Keep the chosen bone index inside the skeleton's range (count known from last frame).
+            if (Plugin.P.Configuration.BoneToBind < 0)
+                Plugin.P.Configuration.BoneToBind = 0;
+            if (GlobalVars.PlayerBoneCount > 0 && Plugin.P.Configuration.BoneToBind > GlobalVars.PlayerBoneCount)
+                Plugin.P.Configuration.BoneToBind = GlobalVars.PlayerBoneCount;
+
             var newPos = Common.GetBoneWorldPosition(target, (uint)Plugin.P.Configuration.BoneToBind)
                          + ((Vector3)target->Position - PrevCameraTargetPosition);
 
@@ -86,6 +92,10 @@ namespace SamplePlugin
                         GlobalVars.RotationBoneValueXName = pose->Skeleton->Bones[GlobalVars.RotationBoneValueX].Name.String;
                         GlobalVars.RotationBoneValueZName = pose->Skeleton->Bones[GlobalVars.RotationBoneValueZ].Name.String;
                         GlobalVars.PlayerBoneCount = pose->Skeleton->Bones.Length - 1; // -1 because Length is 1-based
+
+                        // Name of the bone the camera is pinned to, for the UI picker.
+                        if (Plugin.P.Configuration.BoneToBind >= 0 && Plugin.P.Configuration.BoneToBind < pose->Skeleton->Bones.Length)
+                            GlobalVars.BoneToBindName = pose->Skeleton->Bones[Plugin.P.Configuration.BoneToBind].Name.String;
 
                         // --- Character yaw delta (no bone involved) ---
                         GlobalVars.PlayerXRotationCurrent = target->Rotation;

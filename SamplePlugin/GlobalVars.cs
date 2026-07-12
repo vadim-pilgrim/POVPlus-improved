@@ -18,6 +18,9 @@ namespace SamplePlugin
         public static string RotationBoneValueZName = "ERROR";
         public static int PlayerBoneCount = 1;
 
+        // Name of the bone the camera position is currently pinned to (for the UI picker).
+        public static string BoneToBindName = "ERROR";
+
         // Head-bone rotation, read fresh each frame.
         public static Quaternion CameraQuartCurrent;
 
