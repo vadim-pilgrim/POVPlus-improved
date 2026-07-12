@@ -1,0 +1,11 @@
+{
+  "Author": "Tiraesias",
+  "Name": "POV+",
+  "InternalName": "PovPlus",
+  "Punchline": "More immersive First Person + Motion Sickness!",
+  "Description": "Allows you to see your body in First Person along with optional Camera -> Head Bindings",
+  "Tags": ["POV"],
+  "RepoUrl": "https://github.com/TiraesiascenGraven/POVPlus",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15
+}

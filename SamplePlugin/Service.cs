@@ -26,6 +26,7 @@ namespace SamplePlugin
         [PluginService] public static ITextureProvider TextureProvider { get; private set; } = null!;
         [PluginService] public static ICommandManager CommandManager { get; private set; } = null!;
         [PluginService] public static IClientState ClientState { get; private set; } = null!;
+        [PluginService] public static IObjectTable Objects { get; private set; } = null!;
         [PluginService] public static IDataManager DataManager { get; private set; } = null!;
         [PluginService] public static IPluginLog Log { get; private set; } = null!;
         [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; } = null!;

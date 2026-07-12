@@ -112,7 +112,7 @@ namespace SamplePlugin
 
                     // GETS THE PLAYER CHARACTER : Service.ClientState.LocalPlayer
 
-                    var player = Service.ClientState.LocalPlayer;
+                    var player = Service.Objects.LocalPlayer;
                     if (player != null)
                     {
                         //if (player is ICharacter) { Service.Log.Information($"=== IS ICharacter === {player.Name} ==="); }
