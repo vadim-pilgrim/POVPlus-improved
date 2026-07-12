@@ -21,6 +21,9 @@ namespace SamplePlugin
         // Name of the bone the camera position is currently pinned to (for the UI picker).
         public static string BoneToBindName = "ERROR";
 
+        // Live diagnostic string shown in the UI (which detour branch ran, skeleton state).
+        public static string DebugStatus = "detour not running";
+
         // Head-bone rotation, read fresh each frame.
         public static Quaternion CameraQuartCurrent;
 

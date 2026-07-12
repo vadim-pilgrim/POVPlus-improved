@@ -41,12 +41,16 @@ namespace SamplePlugin
                 return;
             }
 
+            GlobalVars.DebugStatus = $"FP path (mode={camera->mode})";
+
             // --- Camera position: pin it to the head bone plus the configured offset ---------------
 
-            // Keep the chosen bone index inside the skeleton's range (count known from last frame).
+            // Keep the chosen bone index non-negative. Only clamp the upper bound once we've
+            // actually read a real skeleton (PlayerBoneCount > 1), otherwise the picker would
+            // freeze at 1 before the skeleton is known.
             if (Plugin.P.Configuration.BoneToBind < 0)
                 Plugin.P.Configuration.BoneToBind = 0;
-            if (GlobalVars.PlayerBoneCount > 0 && Plugin.P.Configuration.BoneToBind > GlobalVars.PlayerBoneCount)
+            if (GlobalVars.PlayerBoneCount > 1 && Plugin.P.Configuration.BoneToBind > GlobalVars.PlayerBoneCount)
                 Plugin.P.Configuration.BoneToBind = GlobalVars.PlayerBoneCount;
 
             var newPos = Common.GetBoneWorldPosition(target, (uint)Plugin.P.Configuration.BoneToBind)
@@ -73,10 +77,18 @@ namespace SamplePlugin
             // --- Camera rotation: driven from the head bone's animated pose ------------------------
 
             var player = Service.Objects.LocalPlayer;
-            if (player != null)
+            if (player == null)
+            {
+                GlobalVars.DebugStatus += " | player=NULL";
+            }
+            else
             {
                 var playerBase = GetCharacterBase(player);
-                if (playerBase != null && playerBase->Skeleton != null)
+                if (playerBase == null)
+                    GlobalVars.DebugStatus += " | charBase=NULL";
+                else if (playerBase->Skeleton == null)
+                    GlobalVars.DebugStatus += " | skeleton=NULL";
+                else
                 {
                     var skeleton = *playerBase->Skeleton;
                     var partialSkeleton = skeleton.PartialSkeletons;
@@ -84,17 +96,23 @@ namespace SamplePlugin
                     // Partial skeleton 0 is the character body skeleton.
                     const int havokPoseVal = 0;
 
-                    if (partialSkeleton != null && partialSkeleton->GetHavokPose(havokPoseVal) != null)
+                    if (partialSkeleton == null)
+                        GlobalVars.DebugStatus += " | partialSkeleton=NULL";
+                    else if (partialSkeleton->GetHavokPose(havokPoseVal) == null)
+                        GlobalVars.DebugStatus += " | havokPose=NULL";
+                    else
                     {
                         var pose = partialSkeleton->GetHavokPose(havokPoseVal);
+                        var boneArrayLen = pose->Skeleton->Bones.Length;
+                        GlobalVars.DebugStatus += $" | bones={boneArrayLen}";
 
                         // Expose bone names / count for the (experimental) bone-picker UI.
                         GlobalVars.RotationBoneValueXName = pose->Skeleton->Bones[GlobalVars.RotationBoneValueX].Name.String;
                         GlobalVars.RotationBoneValueZName = pose->Skeleton->Bones[GlobalVars.RotationBoneValueZ].Name.String;
-                        GlobalVars.PlayerBoneCount = pose->Skeleton->Bones.Length - 1; // -1 because Length is 1-based
+                        GlobalVars.PlayerBoneCount = boneArrayLen - 1; // -1 because Length is 1-based
 
                         // Name of the bone the camera is pinned to, for the UI picker.
-                        if (Plugin.P.Configuration.BoneToBind >= 0 && Plugin.P.Configuration.BoneToBind < pose->Skeleton->Bones.Length)
+                        if (Plugin.P.Configuration.BoneToBind >= 0 && Plugin.P.Configuration.BoneToBind < boneArrayLen)
                             GlobalVars.BoneToBindName = pose->Skeleton->Bones[Plugin.P.Configuration.BoneToBind].Name.String;
 
                         // --- Character yaw delta (no bone involved) ---
@@ -216,17 +234,31 @@ namespace SamplePlugin
 
         public static void Dispose()
         {
-            // Cammy doesn't do this but it stops errors appearing on unload.
-            Common.CameraManager->worldCamera->VTable.getCameraPosition.Hook.Disable();
-            Common.CameraManager->worldCamera->VTable.getCameraPosition.Hook.Dispose();
+            // Must never throw: a throwing Dispose shows up as an "(unload error)" in Dalamud and
+            // leaves the plugin wedged until the game restarts.
+            try
+            {
+                if (Common.CameraManager != null && Common.CameraManager->worldCamera != null)
+                {
+                    var cam = Common.CameraManager->worldCamera;
 
-            // Revert everything to the pre-plugin state.
-            Common.CameraManager->worldCamera->currentVRotation = 0;
-            Common.CameraManager->worldCamera->maxVRotation = GlobalVars.PreviousMaxVRotation;
-            Common.CameraManager->worldCamera->minVRotation = GlobalVars.PreviousMinVRotation;
-            Common.CameraManager->worldCamera->currentFoV = GlobalVars.PreviousCurrentFoV;
-            Common.CameraManager->worldCamera->tilt = GlobalVars.PreviousTilt;
-            Common.CameraManager->worldCamera->minFoV = GlobalVars.PreviousMinFOV;
+                    var hook = cam->VTable.getCameraPosition.Hook;
+                    hook?.Disable();
+                    hook?.Dispose();
+
+                    // Revert everything to the pre-plugin state.
+                    cam->currentVRotation = 0;
+                    cam->maxVRotation = GlobalVars.PreviousMaxVRotation;
+                    cam->minVRotation = GlobalVars.PreviousMinVRotation;
+                    cam->currentFoV = GlobalVars.PreviousCurrentFoV;
+                    cam->tilt = GlobalVars.PreviousTilt;
+                    cam->minFoV = GlobalVars.PreviousMinFOV;
+                }
+            }
+            catch (Exception ex)
+            {
+                Service.Log.Error(ex, "Error during HideBody.Dispose (ignored so unload stays clean)");
+            }
 
             Service.Log.Information($"===CLOSING===");
         }

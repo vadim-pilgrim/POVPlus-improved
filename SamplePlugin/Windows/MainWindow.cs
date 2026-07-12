@@ -137,8 +137,9 @@ public class MainWindow : Window, IDisposable
         // --- Camera bone picker -----------------------------------------------------------------
         ImGui.TextUnformatted("Camera Bone (which bone the camera is pinned to):");
         ImGui.TextUnformatted($"Current [{Plugin.P.Configuration.BoneToBind}]: {GlobalVars.BoneToBindName}");
+        ImGui.TextWrapped($"Diag: {GlobalVars.DebugStatus}");
 
-        var boneMax = Math.Max(GlobalVars.PlayerBoneCount, 1);
+        var boneMax = GlobalVars.PlayerBoneCount > 1 ? GlobalVars.PlayerBoneCount : 200;
 
         if (ImGui.Button("<##bonePrev") && Plugin.P.Configuration.BoneToBind > 0)
         {
