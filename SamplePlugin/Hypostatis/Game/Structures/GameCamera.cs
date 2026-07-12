@@ -49,8 +49,11 @@ public unsafe partial struct GameCamera : IHypostasisStructure
 
     public class GameCameraVTable(nint* v) : VirtualTable(v)
     {
+        // Signature removed: the old scan-within-vfunc signature is stale on patch 7.5 and, being
+        // a required scan, threw and tore down the whole VTable before getCameraPosition could be
+        // hooked. We don't call this function, so resolving it straight from the vtable slot is fine.
         public delegate void SetCameraLookAtDelegate(GameCamera* camera, Vector3* lookAtPosition, Vector3* cameraPosition, Vector3* a4);
-        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 44 8B 89 ?? ?? ?? ?? 48 8B DA");
+        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 14);
 
         public delegate void GetCameraPositionDelegate(GameCamera* camera, GameObject* target, Vector3* position, Bool swapPerson);
         public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition = new(v, 15);
@@ -61,8 +64,9 @@ public unsafe partial struct GameCamera : IHypostasisStructure
         public delegate Bool CanChangePerspectiveDelegate();
         public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective = new(v, 22);
 
+        // Signature removed for the same reason as setCameraLookAt; unused by this plugin.
         public delegate float GetZoomDeltaDelegate();
-        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3"); // This sig is meant to match multiple things
+        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 28);
     }
 
     private static GameCameraVTable vtable;
